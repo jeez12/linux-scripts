@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Linux Daily Drill</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0e0a;
+    --surface: #0f150f;
+    --surface2: #141c14;
+    --surface3: #1a241a;
+    --border: #1e2e1e;
+    --border2: #263826;
+    --green: #39d353;
+    --green2: #26a641;
+    --green3: #196127;
+    --yellow: #e3b341;
+    --red: #f85149;
+    --cyan: #58d4e8;
+    --purple: #a78bfa;
+    --orange: #fb8500;
+    --text: #e6eee6;
+    --text2: #8b9e8b;
+    --text3: #4a5e4a;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'IBM Plex Sans', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    padding: 36px 32px 80px;
+    max-width: 960px;
+    margin: 0 auto;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(ellipse 60% 40% at 50% -10%, rgba(57,211,83,0.06), transparent);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* HEADER */
+  .header-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--green2);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    position: relative; z-index: 1;
+  }
+
+  h1 {
+    font-size: 30px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.5px;
+    position: relative; z-index: 1;
+  }
+
+  h1 span { color: var(--green); }
+
+  .subtitle {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text3);
+    margin-top: 8px;
+    margin-bottom: 28px;
+    position: relative; z-index: 1;
+  }
+
+  /* INSTRUCTIONS */
+  .instructions {
+    background: rgba(57,211,83,0.05);
+    border: 1px solid rgba(57,211,83,0.15);
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin-bottom: 28px;
+    font-size: 13px;
+    color: var(--text2);
+    line-height: 1.7;
+    position: relative; z-index: 1;
+  }
+
+  .instructions strong { color: var(--green); }
+
+  /* PROGRESS */
+  .progress-wrap {
+    margin-bottom: 28px;
+    position: relative; z-index: 1;
+  }
+
+  .progress-top {
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text3);
+    margin-bottom: 8px;
+  }
+
+  .progress-top span { color: var(--green); }
+
+  .progress-bar { height: 3px; background: var(--surface3); border-radius: 2px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(to right, var(--green3), var(--green)); border-radius: 2px; transition: width 0.4s ease; width: 0%; }
+
+  /* SECTION */
+  .section {
+    margin-bottom: 32px;
+    position: relative; z-index: 1;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  .section-tag {
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 3px 10px;
+    border-radius: 4px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+
+  .tag-nav { background: rgba(88,212,232,0.1); color: var(--cyan); border: 1px solid rgba(88,212,232,0.2); }
+  .tag-file { background: rgba(227,179,65,0.1); color: var(--yellow); border: 1px solid rgba(227,179,65,0.2); }
+  .tag-text { background: rgba(57,211,83,0.1); color: var(--green); border: 1px solid rgba(57,211,83,0.2); }
+  .tag-pipe { background: rgba(248,81,73,0.1); color: var(--red); border: 1px solid rgba(248,81,73,0.2); }
+  .tag-vim { background: rgba(167,139,250,0.1); color: var(--purple); border: 1px solid rgba(167,139,250,0.2); }
+  .tag-combo { background: rgba(251,133,0,0.1); color: var(--orange); border: 1px solid rgba(251,133,0,0.2); }
+
+  .section-line { flex: 1; height: 1px; background: var(--border); }
+
+  /* DRILL ITEM */
+  .drill-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-bottom: 8px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 16px;
+    align-items: center;
+    transition: border-color 0.2s, background 0.2s;
+    cursor: pointer;
+  }
+
+  .drill-item:hover { border-color: var(--border2); }
+
+  .drill-item.done {
+    border-color: rgba(57,211,83,0.25);
+    background: rgba(57,211,83,0.03);
+  }
+
+  .drill-left { display: flex; flex-direction: column; gap: 5px; }
+
+  .drill-cmd {
+    font-family: var(--mono);
+    font-size: 14px;
+    color: var(--cyan);
+    font-weight: 500;
+  }
+
+  .drill-item.done .drill-cmd { color: var(--text3); }
+
+  .drill-desc {
+    font-size: 12px;
+    color: var(--text2);
+    line-height: 1.5;
+  }
+
+  .drill-item.done .drill-desc { color: var(--text3); }
+
+  .drill-why {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    margin-top: 2px;
+  }
+
+  .drill-item.done .drill-why { color: var(--text3); opacity: 0.5; }
+
+  .drill-check {
+    width: 24px; height: 24px;
+    border-radius: 6px;
+    border: 1px solid var(--border2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    color: var(--green);
+    flex-shrink: 0;
+    transition: all 0.2s;
+    background: transparent;
+  }
+
+  .drill-item.done .drill-check {
+    background: rgba(57,211,83,0.15);
+    border-color: var(--green2);
+  }
+
+  /* RESET */
+  .reset-btn {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 6px;
+    padding: 10px 20px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text3);
+    cursor: pointer;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    transition: all 0.2s;
+    margin-top: 8px;
+  }
+
+  .reset-btn:hover { color: var(--red); border-color: rgba(248,81,73,0.3); }
+
+  /* COMPLETE */
+  .complete-banner {
+    display: none;
+    background: rgba(57,211,83,0.06);
+    border: 1px solid rgba(57,211,83,0.25);
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+    margin-top: 24px;
+    position: relative; z-index: 1;
+  }
+
+  .complete-banner.show { display: block; }
+  .complete-banner h3 { font-size: 18px; color: var(--green); margin-bottom: 6px; }
+  .complete-banner p { font-size: 12px; color: var(--text2); font-family: var(--mono); }
+
+  /* PRINT */
+  @media print {
+    body { background: white; color: black; padding: 20px; }
+    body::before { display: none; }
+    .drill-item { border: 1px solid #ccc; background: white; }
+    .drill-cmd { color: #0066cc; }
+    .instructions { background: #f0f0f0; border: 1px solid #ccc; }
+    .reset-btn { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header-label">// linux · daily drill sheet</div>
+<h1>Terminal <span>Muscle Memory</span></h1>
+<div class="subtitle">Run every command below in your terminal. Check it off. Repeat daily until automatic.</div>
+
+<div class="instructions">
+  <strong>How to use this:</strong> Open your WSL2 terminal alongside this page. Type each command yourself — don't copy-paste. Check it off after you run it and understand the output. The goal is for these to become automatic. <strong>Repeat this full drill every day for the first week.</strong> By day 7 you should be typing all of these without thinking.
+</div>
+
+<div class="progress-wrap">
+  <div class="progress-top">
+    <span>Daily Progress</span>
+    <span id="prog-text">0 / 28 done</span>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="prog-fill"></div></div>
+</div>
+
+<!-- NAVIGATION -->
+<div class="section">
+  <div class="section-header">
+    <span class="section-tag tag-nav">Navigation</span>
+    <div class="section-line"></div>
+  </div>
+
+  <div class="drill-item" id="d1" onclick="toggle(1)">
+    <div class="drill-left">
+      <div class="drill-cmd">pwd</div>
+      <div class="drill-desc">Print your current location in the filesystem</div>
+      <div class="drill-why">// you'll run this every time you SSH into a new server</div>
+    </div>
+    <div class="drill-check" id="c1"></div>
+  </div>
+
+  <div class="drill-item" id="d2" onclick="toggle(2)">
+    <div class="drill-left">
+      <div class="drill-cmd">ls</div>
+      <div class="drill-desc">List files and folders in current directory</div>
+      <div class="drill-why">// basic orientation command</div>
+    </div>
+    <div class="drill-check" id="c2"></div>
+  </div>
+
+  <div class="drill-item" id="d3" onclick="toggle(3)">
+    <div class="drill-left">
+      <div class="drill-cmd">ls -la</div>
+      <div class="drill-desc">List all files including hidden, with permissions and sizes</div>
+      <div class="drill-why">// use this to find .env files, check permissions, spot hidden configs</div>
+    </div>
+    <div class="drill-check" id="c3"></div>
+  </div>
+
+  <div class="drill-item" id="d4" onclick="toggle(4)">
+    <div class="drill-left">
+      <div class="drill-cmd">cd ~</div>
+      <div class="drill-desc">Jump to home directory from anywhere</div>
+      <div class="drill-why">// fastest reset when lost deep in a filesystem</div>
+    </div>
+    <div class="drill-check" id="c4"></div>
+  </div>
+
+  <div class="drill-item" id="d5" onclick="toggle(5)">
+    <div class="drill-left">
+      <div class="drill-cmd">cd ..</div>
+      <div class="drill-desc">Go up one directory level</div>
+      <div class="drill-why">// navigate up the tree without typing full paths</div>
+    </div>
+    <div class="drill-check" id="c5"></div>
+  </div>
+
+  <div class="drill-item" id="d6" onclick="toggle(6)">
+    <div class="drill-left">
+      <div class="drill-cmd">mkdir -p projects/mlops/scripts</div>
+      <div class="drill-desc">Create nested directories in one command</div>
+      <div class="drill-why">// -p flag creates all parent directories automatically</div>
+    </div>
+    <div class="drill-check" id="c6"></div>
+  </div>
+</div>
+
+<!-- FILE OPERATIONS -->
+<div class="section">
+  <div class="section-header">
+    <span class="section-tag tag-file">File Ops</span>
+    <div class="section-line"></div>
+  </div>
+
+  <div class="drill-item" id="d7" onclick="toggle(7)">
+    <div class="drill-left">
+      <div class="drill-cmd">touch test.txt</div>
+      <div class="drill-desc">Create an empty file</div>
+      <div class="drill-why">// create placeholder files, update timestamps</div>
+    </div>
+    <div class="drill-check" id="c7"></div>
+  </div>
+
+  <div class="drill-item" id="d8" onclick="toggle(8)">
+    <div class="drill-left">
+      <div class="drill-cmd">cp test.txt test_backup.txt</div>
+      <div class="drill-desc">Copy a file — always backup before editing configs</div>
+      <div class="drill-why">// habit: copy before every config file edit</div>
+    </div>
+    <div class="drill-check" id="c8"></div>
+  </div>
+
+  <div class="drill-item" id="d9" onclick="toggle(9)">
+    <div class="drill-left">
+      <div class="drill-cmd">mv test_backup.txt renamed.txt</div>
+      <div class="drill-desc">Rename a file (move = rename in same directory)</div>
+      <div class="drill-why">// mv is both move and rename depending on destination</div>
+    </div>
+    <div class="drill-check" id="c9"></div>
+  </div>
+
+  <div class="drill-item" id="d10" onclick="toggle(10)">
+    <div class="drill-left">
+      <div class="drill-cmd">rm renamed.txt</div>
+      <div class="drill-desc">Delete a file — no recycle bin, permanent</div>
+      <div class="drill-why">// no undo — always double-check what you're deleting</div>
+    </div>
+    <div class="drill-check" id="c10"></div>
+  </div>
+
+  <div class="drill-item" id="d11" onclick="toggle(11)">
+    <div class="drill-left">
+      <div class="drill-cmd">cat test.txt</div>
+      <div class="drill-desc">Print file contents to terminal</div>
+      <div class="drill-why">// quick read of small config files and scripts</div>
+    </div>
+    <div class="drill-check" id="c11"></div>
+  </div>
+</div>
+
+<!-- TEXT PROCESSING -->
+<div class="section">
+  <div class="section-header">
+    <span class="section-tag tag-text">Text Processing</span>
+    <div class="section-line"></div>
+  </div>
+
+  <div class="drill-item" id="d12" onclick="toggle(12)">
+    <div class="drill-left">
+      <div class="drill-cmd">echo "MLOps Day 1" > notes.txt</div>
+      <div class="drill-desc">Write text into a file (overwrites existing content)</div>
+      <div class="drill-why">// > overwrites. >> appends. Know the difference.</div>
+    </div>
+    <div class="drill-check" id="c12"></div>
+  </div>
+
+  <div class="drill-item" id="d13" onclick="toggle(13)">
+    <div class="drill-left">
+      <div class="drill-cmd">echo "Day 2 coming" >> notes.txt</div>
+      <div class="drill-desc">Append text to a file without overwriting</div>
+      <div class="drill-why">// >> is append. Critical difference from ></div>
+    </div>
+    <div class="drill-check" id="c13"></div>
+  </div>
+
+  <div class="drill-item" id="d14" onclick="toggle(14)">
+    <div class="drill-left">
+      <div class="drill-cmd">head -n 5 notes.txt</div>
+      <div class="drill-desc">Show first 5 lines — inspect datasets without loading them</div>
+      <div class="drill-why">// first command to run on any new data file</div>
+    </div>
+    <div class="drill-check" id="c14"></div>
+  </div>
+
+  <div class="drill-item" id="d15" onclick="toggle(15)">
+    <div class="drill-left">
+      <div class="drill-cmd">tail -n 5 notes.txt</div>
+      <div class="drill-desc">Show last 5 lines</div>
+      <div class="drill-why">// check end of log files for latest events</div>
+    </div>
+    <div class="drill-check" id="c15"></div>
+  </div>
+
+  <div class="drill-item" id="d16" onclick="toggle(16)">
+    <div class="drill-left">
+      <div class="drill-cmd">tail -f notes.txt</div>
+      <div class="drill-desc">Follow a file live as it updates (Ctrl+C to stop)</div>
+      <div class="drill-why">// watch training logs, Docker logs, pipeline output in real time</div>
+    </div>
+    <div class="drill-check" id="c16"></div>
+  </div>
+
+  <div class="drill-item" id="d17" onclick="toggle(17)">
+    <div class="drill-left">
+      <div class="drill-cmd">wc -l notes.txt</div>
+      <div class="drill-desc">Count lines in a file</div>
+      <div class="drill-why">// verify dataset row counts before training</div>
+    </div>
+    <div class="drill-check" id="c17"></div>
+  </div>
+
+  <div class="drill-item" id="d18" onclick="toggle(18)">
+    <div class="drill-left">
+      <div class="drill-cmd">sort notes.txt</div>
+      <div class="drill-desc">Sort lines alphabetically A→Z</div>
+      <div class="drill-why">// always sort before using uniq</div>
+    </div>
+    <div class="drill-check" id="c18"></div>
+  </div>
+
+  <div class="drill-item" id="d19" onclick="toggle(19)">
+    <div class="drill-left">
+      <div class="drill-cmd">sort notes.txt | uniq</div>
+      <div class="drill-desc">Remove duplicate lines from output</div>
+      <div class="drill-why">// deduplicate log entries, IP lists, error types</div>
+    </div>
+    <div class="drill-check" id="c19"></div>
+  </div>
+
+  <div class="drill-item" id="d20" onclick="toggle(20)">
+    <div class="drill-left">
+      <div class="drill-cmd">sort notes.txt | uniq -c</div>
+      <div class="drill-desc">Count how many times each unique line appears</div>
+      <div class="drill-why">// frequency analysis on logs and events</div>
+    </div>
+    <div class="drill-check" id="c20"></div>
+  </div>
+</div>
+
+<!-- PIPES & SEARCH -->
+<div class="section">
+  <div class="section-header">
+    <span class="section-tag tag-pipe">Pipes & Search</span>
+    <div class="section-line"></div>
+  </div>
+
+  <div class="drill-item" id="d21" onclick="toggle(21)">
+    <div class="drill-left">
+      <div class="drill-cmd">grep "Day" notes.txt</div>
+      <div class="drill-desc">Find all lines containing a word or pattern</div>
+      <div class="drill-why">// search logs for errors, warnings, specific events</div>
+    </div>
+    <div class="drill-check" id="c21"></div>
+  </div>
+
+  <div class="drill-item" id="d22" onclick="toggle(22)">
+    <div class="drill-left">
+      <div class="drill-cmd">grep "Day" notes.txt | wc -l</div>
+      <div class="drill-desc">Count how many lines match a pattern</div>
+      <div class="drill-why">// count errors, warnings, specific events in logs</div>
+    </div>
+    <div class="drill-check" id="c22"></div>
+  </div>
+
+  <div class="drill-item" id="d23" onclick="toggle(23)">
+    <div class="drill-left">
+      <div class="drill-cmd">cat notes.txt | tr 'a-z' 'A-Z'</div>
+      <div class="drill-desc">Convert text to uppercase via pipe</div>
+      <div class="drill-why">// normalize text in shell scripts for consistent comparisons</div>
+    </div>
+    <div class="drill-check" id="c23"></div>
+  </div>
+</div>
+
+<!-- VIM -->
+<div class="section">
+  <div class="section-header">
+    <span class="section-tag tag-vim">Vim</span>
+    <div class="section-line"></div>
+  </div>
+
+  <div class="drill-item" id="d24" onclick="toggle(24)">
+    <div class="drill-left">
+      <div class="drill-cmd">vim notes.txt</div>
+      <div class="drill-desc">Open a file in vim</div>
+      <div class="drill-why">// you'll edit files on remote servers where only vim exists</div>
+    </div>
+    <div class="drill-check" id="c24"></div>
+  </div>
+
+  <div class="drill-item" id="d25" onclick="toggle(25)">
+    <div class="drill-left">
+      <div class="drill-cmd">i → type something → Esc → :wq</div>
+      <div class="drill-desc">Enter insert mode, type, return to normal, save and quit</div>
+      <div class="drill-why">// the complete vim edit cycle. Drill until automatic.</div>
+    </div>
+    <div class="drill-check" id="c25"></div>
+  </div>
+
+  <div class="drill-item" id="d26" onclick="toggle(26)">
+    <div class="drill-left">
+      <div class="drill-cmd">vim notes.txt → make change → Esc → :q!</div>
+      <div class="drill-desc">Open, make accidental change, exit WITHOUT saving</div>
+      <div class="drill-why">// emergency exit. Saves you from breaking configs.</div>
+    </div>
+    <div class="drill-check" id="c26"></div>
+  </div>
+</div>
+
+<!-- POWER COMBOS -->
+<div class="section">
+  <div class="section-header">
+    <span class="section-tag tag-combo">Power Combos</span>
+    <div class="section-line"></div>
+  </div>
+
+  <div class="drill-item" id="d27" onclick="toggle(27)">
+    <div class="drill-left">
+      <div class="drill-cmd">grep "ERROR" app.log | sort | uniq -c | sort -rn</div>
+      <div class="drill-desc">Find errors → deduplicate → count → rank by frequency</div>
+      <div class="drill-why">// the full log analysis chain. Use this on real MLOps logs.</div>
+    </div>
+    <div class="drill-check" id="c27"></div>
+  </div>
+
+  <div class="drill-item" id="d28" onclick="toggle(28)">
+    <div class="drill-left">
+      <div class="drill-cmd">ls -la | grep ".py" | wc -l</div>
+      <div class="drill-desc">List files → filter Python files → count them</div>
+      <div class="drill-why">// chaining 3 commands. Shows you understand pipelines.</div>
+    </div>
+    <div class="drill-check" id="c28"></div>
+  </div>
+</div>
+
+<button class="reset-btn" onclick="resetAll()">↺ RESET ALL — Start Fresh</button>
+
+<div class="complete-banner" id="complete-banner">
+  <h3>✓ Full Drill Complete</h3>
+  <p>Come back tomorrow and run it again. Repeat until every command is automatic.</p>
+</div>
+
+<script>
+  const TOTAL = 28;
+  let checked = new Set();
+
+  function toggle(n) {
+    const item = document.getElementById('d'+n);
+    const check = document.getElementById('c'+n);
+    if (checked.has(n)) {
+      checked.delete(n);
+      item.classList.remove('done');
+      check.textContent = '';
+    } else {
+      checked.add(n);
+      item.classList.add('done');
+      check.textContent = '✓';
+    }
+    updateProgress();
+  }
+
+  function updateProgress() {
+    const done = checked.size;
+    const pct = Math.round((done / TOTAL) * 100);
+    document.getElementById('prog-fill').style.width = pct + '%';
+    document.getElementById('prog-text').textContent = done + ' / ' + TOTAL + ' done';
+    document.getElementById('complete-banner').className = done === TOTAL ? 'complete-banner show' : 'complete-banner';
+  }
+
+  function resetAll() {
+    checked.clear();
+    for (let i = 1; i <= TOTAL; i++) {
+      document.getElementById('d'+i).classList.remove('done');
+      document.getElementById('c'+i).textContent = '';
+    }
+    updateProgress();
+  }
+</script>
+</body>
+</html>
