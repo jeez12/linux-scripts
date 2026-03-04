@@ -176,6 +176,28 @@ kill -9 12345
 
 ---
 
+## Bash Syntax Reference
+
+# Capture command output
+VARIABLE=$(command)
+
+# Check if directory exists
+if [ -d "$dir" ]; then
+  echo "exists"
+fi
+
+# Loop through list
+for item in one two three; do
+  echo "$item"
+done
+
+# Check if file exists
+if [ -f "$file" ]; then
+  echo "file found"
+fi
+
+
+
 ## Job Control
 
 Run long processes without keeping the terminal locked.
