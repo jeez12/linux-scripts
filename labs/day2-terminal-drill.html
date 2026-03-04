@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Terminal Drill — Day 2</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #070a07;
+    --surface: #0c100c;
+    --surface2: #111611;
+    --surface3: #171e17;
+    --border: #1a251a;
+    --border2: #223022;
+    --green: #39d353;
+    --green2: #26a641;
+    --green3: #155724;
+    --green4: #0a2e10;
+    --yellow: #e3b341;
+    --red: #f85149;
+    --cyan: #58d4e8;
+    --orange: #fb8500;
+    --purple: #a78bfa;
+    --text: #d4e8d4;
+    --text2: #7a9e7a;
+    --text3: #3d5c3d;
+    --mono: 'IBM Plex Mono', monospace;
+    --display: 'Bebas Neue', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--mono);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px);
+    pointer-events: none;
+    z-index: 1000;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(ellipse 70% 50% at 50% 0%, rgba(57,211,83,0.08), transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .header {
+    position: relative;
+    z-index: 10;
+    padding: 32px 36px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .header-left h1 {
+    font-family: var(--display);
+    font-size: clamp(42px, 6vw, 72px);
+    color: var(--green);
+    letter-spacing: 4px;
+    line-height: 0.9;
+    text-shadow: 0 0 40px rgba(57,211,83,0.3);
+  }
+
+  .header-left .sub { font-size: 11px; color: var(--text3); letter-spacing: 3px; text-transform: uppercase; margin-top: 6px; }
+
+  .header-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+
+  .session-btns { display: flex; gap: 8px; }
+
+  .session-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 4px;
+    padding: 8px 16px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text2);
+    cursor: pointer;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    transition: all 0.2s;
+  }
+
+  .session-btn.start { border-color: rgba(57,211,83,0.3); color: var(--green2); }
+  .session-btn.end { border-color: rgba(248,81,73,0.3); color: var(--red); }
+
+  .stats-row {
+    position: relative;
+    z-index: 10;
+    padding: 16px 36px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    gap: 0;
+    overflow-x: auto;
+  }
+
+  .stat { flex: 1; min-width: 100px; padding: 8px 20px; border-right: 1px solid var(--border); text-align: center; }
+  .stat:last-child { border-right: none; }
+  .stat-val { font-family: var(--display); font-size: 32px; color: var(--green); line-height: 1; text-shadow: 0 0 20px rgba(57,211,83,0.4); }
+  .stat-label { font-size: 9px; color: var(--text3); letter-spacing: 2px; text-transform: uppercase; margin-top: 4px; }
+
+  .main {
+    position: relative;
+    z-index: 10;
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    min-height: calc(100vh - 160px);
+  }
+
+  .sidebar {
+    border-right: 1px solid var(--border);
+    padding: 20px 0;
+    position: sticky;
+    top: 0;
+    height: fit-content;
+  }
+
+  .sidebar-label { font-size: 9px; color: var(--text3); letter-spacing: 3px; text-transform: uppercase; padding: 0 20px; margin-bottom: 12px; }
+
+  .nav-item {
+    padding: 10px 20px;
+    font-size: 11px;
+    color: var(--text3);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-left: 2px solid transparent;
+    transition: all 0.15s;
+  }
+
+  .nav-item:hover { color: var(--text2); background: var(--surface2); }
+  .nav-item.active { color: var(--green); border-left-color: var(--green); background: rgba(57,211,83,0.04); }
+  .nav-progress { font-size: 10px; color: var(--text3); }
+  .nav-item.active .nav-progress { color: var(--green2); }
+
+  .sidebar-divider { height: 1px; background: var(--border); margin: 12px 0; }
+
+  .perm-ref {
+    margin: 0 20px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px;
+    font-size: 10px;
+    color: var(--text3);
+    line-height: 2;
+  }
+
+  .perm-ref .ref-title { color: var(--text3); letter-spacing: 2px; text-transform: uppercase; font-size: 9px; margin-bottom: 6px; }
+
+  .reset-all {
+    margin: 12px 20px 0;
+    background: none;
+    border: 1px solid var(--border2);
+    border-radius: 3px;
+    padding: 7px 12px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    cursor: pointer;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    width: calc(100% - 40px);
+    transition: all 0.2s;
+  }
+
+  .reset-all:hover { color: var(--red); border-color: rgba(248,81,73,0.3); }
+
+  .content { padding: 28px 36px 80px; overflow-y: auto; }
+
+  .section { display: none; }
+  .section.active { display: block; }
+
+  .section-title-row { display: flex; align-items: center; gap: 14px; margin-bottom: 8px; }
+  .section-title { font-family: var(--display); font-size: 28px; color: var(--text); letter-spacing: 3px; }
+
+  .section-objective {
+    background: var(--green4);
+    border: 1px solid var(--green3);
+    border-radius: 6px;
+    padding: 12px 16px;
+    margin-bottom: 24px;
+    font-size: 11px;
+    color: var(--text2);
+    line-height: 1.7;
+  }
+
+  .section-objective .obj-label { font-size: 9px; color: var(--green2); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 6px; }
+  .section-objective strong { color: var(--green); }
+
+  .drill-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    margin-bottom: 6px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+
+  .drill-card:hover { border-color: var(--border2); }
+  .drill-card.mastered { border-color: rgba(57,211,83,0.2); background: rgba(57,211,83,0.02); }
+
+  .drill-main {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    cursor: pointer;
+  }
+
+  .drill-left { display: flex; flex-direction: column; gap: 4px; }
+
+  .drill-cmd { font-size: 13px; font-weight: 600; color: var(--cyan); letter-spacing: 0.5px; }
+  .drill-card.mastered .drill-cmd { color: var(--text3); }
+
+  .drill-desc { font-size: 11px; color: var(--text2); line-height: 1.4; }
+  .drill-card.mastered .drill-desc { color: var(--text3); }
+
+  .drill-mlops { font-size: 10px; color: var(--green3); font-style: italic; }
+
+  .drill-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+  .rep-dots { display: flex; gap: 4px; align-items: center; }
+
+  .rep-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    border: 1px solid var(--border2);
+    cursor: pointer;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+
+  .rep-dot.filled { background: var(--green2); border-color: var(--green); box-shadow: 0 0 6px rgba(57,211,83,0.4); }
+  .rep-dot.filled.gold { background: var(--yellow); border-color: var(--yellow); box-shadow: 0 0 6px rgba(227,179,65,0.4); }
+
+  .rep-count { font-size: 10px; color: var(--text3); min-width: 28px; text-align: right; }
+  .rep-count.complete { color: var(--green); }
+
+  .target-badge { font-size: 9px; padding: 2px 7px; border-radius: 3px; letter-spacing: 1px; text-transform: uppercase; white-space: nowrap; }
+  .target-5 { background: rgba(57,211,83,0.1); color: var(--green2); border: 1px solid rgba(57,211,83,0.2); }
+  .target-7 { background: rgba(227,179,65,0.1); color: var(--yellow); border: 1px solid rgba(227,179,65,0.2); }
+  .target-10 { background: rgba(248,81,73,0.1); color: var(--red); border: 1px solid rgba(248,81,73,0.2); }
+
+  .critical-tag { font-size: 9px; color: var(--red); letter-spacing: 1px; padding: 1px 6px; border: 1px solid rgba(248,81,73,0.3); border-radius: 3px; margin-left: 8px; }
+
+  .session-log { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 14px 16px; margin-top: 20px; }
+  .log-label { font-size: 9px; color: var(--text3); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 10px; }
+  .log-entry { font-size: 11px; color: var(--text3); line-height: 2; border-bottom: 1px solid var(--border); padding-bottom: 4px; margin-bottom: 4px; }
+  .log-entry:last-child { border-bottom: none; }
+  .log-entry .ts { color: var(--green3); }
+  .log-entry .ev { color: var(--text2); }
+
+  .done-banner { display: none; background: rgba(57,211,83,0.05); border: 1px solid rgba(57,211,83,0.2); border-radius: 6px; padding: 20px; text-align: center; margin-top: 20px; }
+  .done-banner.show { display: block; }
+  .done-banner .done-title { font-family: var(--display); font-size: 28px; color: var(--green); letter-spacing: 4px; margin-bottom: 6px; }
+  .done-banner p { font-size: 11px; color: var(--text2); line-height: 1.7; }
+
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+  @media (max-width: 700px) {
+    .main { grid-template-columns: 1fr; }
+    .sidebar { position: static; border-right: none; border-bottom: 1px solid var(--border); display: flex; flex-wrap: wrap; padding: 12px; gap: 4px; }
+    .nav-item { border-left: none; border-bottom: 2px solid transparent; padding: 6px 12px; border-radius: 4px; }
+    .nav-item.active { border-bottom-color: var(--green); border-left-color: transparent; }
+    .sidebar-label, .sidebar-divider, .reset-all, .perm-ref { display: none; }
+    .header { padding: 20px; }
+    .content { padding: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <h1>DAY 2<br>DRILL</h1>
+    <div class="sub">// Permissions · Processes · Bash — MLOps Path</div>
+  </div>
+  <div class="header-right">
+    <div class="session-btns">
+      <button class="session-btn start" onclick="logSession('START')">▶ START SESSION</button>
+      <button class="session-btn end" onclick="logSession('END')">■ END SESSION</button>
+    </div>
+    <div style="font-size:10px;color:var(--text3);text-align:right;" id="session-status">No active session</div>
+  </div>
+</div>
+
+<div class="stats-row">
+  <div class="stat"><div class="stat-val" id="stat-total">0</div><div class="stat-label">Commands Done</div></div>
+  <div class="stat"><div class="stat-val" id="stat-mastered">0</div><div class="stat-label">Mastered</div></div>
+  <div class="stat"><div class="stat-val" id="stat-reps">0</div><div class="stat-label">Total Reps Today</div></div>
+  <div class="stat"><div class="stat-val" id="stat-pct">0%</div><div class="stat-label">Session Complete</div></div>
+</div>
+
+<div class="main">
+  <div class="sidebar">
+    <div class="sidebar-label">Categories</div>
+    <div class="nav-item active" onclick="showSection('chmod')" id="nav-chmod"><span>chmod</span><span class="nav-progress" id="np-chmod">0/8</span></div>
+    <div class="nav-item" onclick="showSection('chown')" id="nav-chown"><span>chown</span><span class="nav-progress" id="np-chown">0/4</span></div>
+    <div class="nav-item" onclick="showSection('process')" id="nav-process"><span>Processes</span><span class="nav-progress" id="np-process">0/6</span></div>
+    <div class="nav-item" onclick="showSection('bash')" id="nav-bash"><span>Bash Scripts</span><span class="nav-progress" id="np-bash">0/7</span></div>
+    <div class="nav-item" onclick="showSection('combo')" id="nav-combo"><span>Power Combos</span><span class="nav-progress" id="np-combo">0/4</span></div>
+    <div class="sidebar-divider"></div>
+    <div class="perm-ref">
+      <div class="ref-title">Quick Ref</div>
+      <span style="color:var(--green)">r</span>=4 <span style="color:var(--green)">w</span>=2 <span style="color:var(--green)">x</span>=1<br>
+      <span style="color:var(--cyan)">7</span>=rwx &nbsp;<span style="color:var(--cyan)">6</span>=rw-<br>
+      <span style="color:var(--cyan)">5</span>=r-x &nbsp;<span style="color:var(--cyan)">4</span>=r--<br>
+      ──────────────<br>
+      <span style="color:var(--yellow)">755</span> scripts<br>
+      <span style="color:var(--yellow)">644</span> configs<br>
+      <span style="color:var(--yellow)">600</span> secrets<br>
+    </div>
+    <button class="reset-all" onclick="resetAll()">↺ Reset All Reps</button>
+  </div>
+
+  <div class="content">
+
+    <!-- CHMOD -->
+    <div class="section active" id="sec-chmod">
+      <div class="section-title-row"><div class="section-title">CHMOD</div></div>
+      <div class="section-objective">
+        <div class="obj-label">Objective</div>
+        Wrong permissions are one of the most common reasons MLOps pipelines fail silently. <strong>A script that can't execute, a config file that can't be read, a .env file exposed to everyone.</strong> Drill these until setting permissions is automatic.
+      </div>
+      <div id="drills-chmod"></div>
+    </div>
+
+    <!-- CHOWN -->
+    <div class="section" id="sec-chown">
+      <div class="section-title-row"><div class="section-title">CHOWN</div></div>
+      <div class="section-objective">
+        <div class="obj-label">Objective</div>
+        Docker containers create files as root constantly. <strong>You will fix ownership issues every week in production.</strong> Know chown without thinking.
+      </div>
+      <div id="drills-chown"></div>
+    </div>
+
+    <!-- PROCESSES -->
+    <div class="section" id="sec-process">
+      <div class="section-title-row"><div class="section-title">PROCESSES</div></div>
+      <div class="section-objective">
+        <div class="obj-label">Objective</div>
+        When a training job hangs, when memory spikes, when a service won't start — <strong>ps aux and kill are your first tools.</strong> top shows you what's happening live. These save you in production.
+      </div>
+      <div id="drills-process"></div>
+    </div>
+
+    <!-- BASH -->
+    <div class="section" id="sec-bash">
+      <div class="section-title-row"><div class="section-title">BASH SCRIPTS</div></div>
+      <div class="section-objective">
+        <div class="obj-label">Objective</div>
+        Every MLOps pipeline starts with a shell script. <strong>You wrote system-info.sh today — own every line of it.</strong> These are the constructs you used. Repeat them until they're automatic.
+      </div>
+      <div id="drills-bash"></div>
+    </div>
+
+    <!-- POWER COMBOS -->
+    <div class="section" id="sec-combo">
+      <div class="section-title-row"><div class="section-title">POWER COMBOS</div></div>
+      <div class="section-objective">
+        <div class="obj-label">Objective</div>
+        <strong>These are real MLOps workflows</strong> — not exercises. Each one solves a problem you will actually face. Run them in your terminal with real files.
+      </div>
+      <div id="drills-combo"></div>
+    </div>
+
+    <div class="session-log">
+      <div class="log-label">Session Log</div>
+      <div id="log-entries">
+        <div class="log-entry"><span class="ts">--:--:--</span> <span class="ev">No session started yet. Press START SESSION to begin.</span></div>
+      </div>
+    </div>
+
+    <div class="done-banner" id="done-banner">
+      <div class="done-title">DAY 2 DRILL COMPLETE</div>
+      <p>All commands mastered. Run this again at the start of tomorrow's session.<br>Day 1 + Day 2 drills together = your daily warmup from now on.</p>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const DRILLS = {
+  chmod: {
+    drills: [
+      { cmd: 'chmod 755 script.sh', desc: 'Standard executable script — owner full, group+others read+execute', mlops: 'Every bash script you write needs this', target: 10, critical: true },
+      { cmd: 'chmod 644 config.yaml', desc: 'Standard config file — owner rw, group+others read only', mlops: 'Model configs, pipeline configs, yaml files', target: 7, critical: true },
+      { cmd: 'chmod 600 .env', desc: 'Sensitive file — owner read+write only, no one else', mlops: 'AWS credentials, API keys, secrets', target: 10, critical: true },
+      { cmd: 'chmod 600 ~/.ssh/id_ed25519', desc: 'SSH private key — must be 600 or SSH refuses to work', mlops: 'SSH breaks silently if this is wrong', target: 7, critical: true },
+      { cmd: 'chmod +x script.sh', desc: 'Add execute permission for everyone — quick shortcut', mlops: 'Fastest way to make a new script runnable', target: 10, critical: true },
+      { cmd: 'chmod u+x script.sh', desc: 'Add execute for owner only', mlops: 'When you want only you to run a script', target: 5 },
+      { cmd: 'chmod go-w config.yaml', desc: 'Remove write from group and others without touching owner', mlops: 'Fix accidentally writable shared configs', target: 7 },
+      { cmd: 'chmod -R 755 scripts/', desc: 'Apply permissions recursively to all files in folder', mlops: 'Fix entire directory of scripts at once', target: 5 },
+    ]
+  },
+  chown: {
+    drills: [
+      { cmd: 'chown ahmad:ahmad file.txt', desc: 'Change owner and group of a file', mlops: 'Fix files created by wrong user', target: 7, critical: true },
+      { cmd: 'sudo chown ahmad:ahmad file.txt', desc: 'Change ownership with elevated permissions', mlops: 'Most chown operations need sudo', target: 7, critical: true },
+      { cmd: 'sudo chown -R ahmad:ahmad folder/', desc: 'Recursively change ownership of folder and all contents', mlops: 'Fix Docker-created files owned by root', target: 10, critical: true },
+      { cmd: 'ls -la', desc: 'Check ownership and permissions of all files', mlops: 'Always verify after chown and chmod', target: 7 },
+    ]
+  },
+  process: {
+    drills: [
+      { cmd: 'ps aux', desc: 'Snapshot of all running processes', mlops: 'Check if training job or service is running', target: 7, critical: true },
+      { cmd: 'ps aux | grep python', desc: 'Find all Python processes — get their PID', mlops: 'Locate a hung training job before killing it', target: 10, critical: true },
+      { cmd: 'ps aux | grep training.py', desc: 'Check if specific script is running', mlops: 'Verify pipeline started correctly', target: 7 },
+      { cmd: 'kill -9 PID', desc: 'Force kill a process by ID — cannot be ignored', mlops: 'Terminate a hung training job immediately', target: 10, critical: true },
+      { cmd: 'top', desc: 'Live process monitor — CPU and memory in real time (q to exit)', mlops: 'Watch resource usage during training runs', target: 5 },
+      { cmd: 'jobs', desc: 'List background jobs in current terminal', mlops: 'Check what is running in background', target: 5 },
+    ]
+  },
+  bash: {
+    drills: [
+      { cmd: '#!/bin/bash', desc: 'Shebang — first line of every bash script, no exceptions', mlops: 'Without this Linux does not know how to run the script', target: 10, critical: true },
+      { cmd: 'VARIABLE=$(command)', desc: 'Capture command output into a variable', mlops: 'DATE=$(date), MEMORY=$(free -h), used constantly', target: 10, critical: true },
+      { cmd: 'echo "text $VARIABLE"', desc: 'Print text with variable expansion', mlops: 'Display results in script output', target: 7 },
+      { cmd: 'if [ -d "$dir" ]; then', desc: 'Check if directory exists — -d flag', mlops: 'Validate paths before pipeline runs', target: 7, critical: true },
+      { cmd: 'if [ -f "$file" ]; then', desc: 'Check if file exists — -f flag', mlops: 'Verify model file exists before serving', target: 7 },
+      { cmd: 'for item in list; do', desc: 'Loop through a list of items', mlops: 'Process multiple directories, files, or servers', target: 7, critical: true },
+      { cmd: 'chmod 755 script.sh && ./script.sh', desc: 'Make executable and run in one line', mlops: 'Standard workflow after writing a new script', target: 5 },
+    ]
+  },
+  combo: {
+    drills: [
+      { cmd: 'ps aux | grep python | grep -v grep', desc: 'Find Python processes without showing the grep itself', mlops: 'Clean process search — production standard', target: 7, critical: true },
+      { cmd: 'ps aux | grep training.py | awk \'{print $2}\'', desc: 'Get just the PID of a running training job', mlops: 'Pipe into kill to terminate specific process', target: 7 },
+      { cmd: 'sudo chown -R ahmad:ahmad . && chmod -R 755 scripts/', desc: 'Fix ownership then fix permissions in one shot', mlops: 'Standard fix after Docker build creates wrong permissions', target: 5, critical: true },
+      { cmd: 'ls -la | grep \'^-rwx\'', desc: 'List only executable files in current directory', mlops: 'Verify which scripts are ready to run', target: 5 },
+    ]
+  }
+};
+
+let state = {};
+let sessionLog = [];
+
+function initState() {
+  Object.keys(DRILLS).forEach(sec => {
+    DRILLS[sec].drills.forEach((d, i) => {
+      const key = `${sec}_${i}`;
+      if (!state[key]) state[key] = 0;
+    });
+  });
+}
+
+function renderDrills(secId) {
+  const container = document.getElementById(`drills-${secId}`);
+  if (!container) return;
+  container.innerHTML = '';
+  DRILLS[secId].drills.forEach((d, i) => {
+    const key = `${secId}_${i}`;
+    const reps = state[key] || 0;
+    const mastered = reps >= d.target;
+    const card = document.createElement('div');
+    card.className = `drill-card${mastered ? ' mastered' : ''}`;
+    card.id = `card-${key}`;
+    let dotsHtml = '';
+    for (let r = 0; r < d.target; r++) {
+      const filled = r < reps;
+      const gold = filled && mastered;
+      dotsHtml += `<div class="rep-dot${filled ? (gold ? ' filled gold' : ' filled') : ''}" onclick="addRep('${key}', ${d.target}, event)"></div>`;
+    }
+    const targetClass = d.target <= 5 ? 'target-5' : d.target <= 7 ? 'target-7' : 'target-10';
+    card.innerHTML = `
+      <div class="drill-main" onclick="addRep('${key}', ${d.target}, event)">
+        <div class="drill-left">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <div class="drill-cmd">${escHtml(d.cmd)}</div>
+            ${d.critical ? '<span class="critical-tag">CRITICAL</span>' : ''}
+          </div>
+          <div class="drill-desc">${d.desc}</div>
+          <div class="drill-mlops">// MLOps: ${d.mlops}</div>
+        </div>
+        <div class="drill-right">
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+            <span class="target-badge ${targetClass}">${d.target} reps</span>
+            <div class="rep-dots" id="dots-${key}">${dotsHtml}</div>
+            <div class="rep-count${mastered ? ' complete' : ''}" id="count-${key}">${reps}/${d.target}${mastered ? ' ✓' : ''}</div>
+          </div>
+        </div>
+      </div>`;
+    container.appendChild(card);
+  });
+}
+
+function escHtml(str) { return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function addRep(key, target, e) {
+  if (e) e.stopPropagation();
+  const prev = state[key] || 0;
+  state[key] = prev >= target ? 0 : prev + 1;
+  const reps = state[key];
+  const mastered = reps >= target;
+  const card = document.getElementById(`card-${key}`);
+  if (card) card.className = `drill-card${mastered ? ' mastered' : ''}`;
+  const dotsContainer = document.getElementById(`dots-${key}`);
+  if (dotsContainer) {
+    dotsContainer.querySelectorAll('.rep-dot').forEach((dot, r) => {
+      const filled = r < reps;
+      dot.className = `rep-dot${filled ? (mastered ? ' filled gold' : ' filled') : ''}`;
+    });
+  }
+  const countEl = document.getElementById(`count-${key}`);
+  if (countEl) { countEl.className = `rep-count${mastered ? ' complete' : ''}`; countEl.textContent = `${reps}/${target}${mastered ? ' ✓' : ''}`; }
+  if (mastered && prev < target) addLog(`Mastered: ${key.split('_')[0].toUpperCase()} command ${parseInt(key.split('_')[1])+1}`);
+  updateStats();
+  updateNavProgress();
+}
+
+function updateStats() {
+  let totalDone = 0, mastered = 0, totalReps = 0, totalCmds = 0;
+  Object.keys(DRILLS).forEach(sec => {
+    DRILLS[sec].drills.forEach((d, i) => {
+      const key = `${sec}_${i}`;
+      const reps = state[key] || 0;
+      totalCmds++; totalReps += reps;
+      if (reps > 0) totalDone++;
+      if (reps >= d.target) mastered++;
+    });
+  });
+  document.getElementById('stat-total').textContent = totalDone;
+  document.getElementById('stat-mastered').textContent = mastered;
+  document.getElementById('stat-reps').textContent = totalReps;
+  document.getElementById('stat-pct').textContent = Math.round((mastered/totalCmds)*100) + '%';
+  if (mastered === totalCmds) { document.getElementById('done-banner').classList.add('show'); addLog('ALL COMMANDS MASTERED — Day 2 complete!'); }
+}
+
+function updateNavProgress() {
+  Object.keys(DRILLS).forEach(sec => {
+    const drills = DRILLS[sec].drills;
+    const mastered = drills.filter((d, i) => (state[`${sec}_${i}`] || 0) >= d.target).length;
+    const el = document.getElementById(`np-${sec}`);
+    if (el) el.textContent = `${mastered}/${drills.length}`;
+  });
+}
+
+function showSection(secId) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById(`sec-${secId}`).classList.add('active');
+  document.getElementById(`nav-${secId}`).classList.add('active');
+  renderDrills(secId);
+}
+
+function logSession(type) {
+  const now = new Date();
+  const ts = now.toTimeString().split(' ')[0];
+  const date = now.toLocaleDateString();
+  document.getElementById('session-status').textContent = `Session ${type === 'START' ? 'started' : 'ended'} at ${ts}`;
+  addLog(`SESSION ${type} — ${date} ${ts}`);
+}
+
+function addLog(msg) {
+  const now = new Date().toTimeString().split(' ')[0];
+  sessionLog.push({ ts: now, msg });
+  const container = document.getElementById('log-entries');
+  const entry = document.createElement('div');
+  entry.className = 'log-entry';
+  entry.innerHTML = `<span class="ts">${now}</span> <span class="ev">${msg}</span>`;
+  if (container.children.length === 1 && container.children[0].querySelector('.ts').textContent === '--:--:--') container.innerHTML = '';
+  container.appendChild(entry);
+  container.scrollTop = container.scrollHeight;
+}
+
+function resetAll() {
+  if (!confirm('Reset all reps?')) return;
+  Object.keys(state).forEach(k => state[k] = 0);
+  const activeSection = document.querySelector('.nav-item.active');
+  if (activeSection) renderDrills(activeSection.id.replace('nav-', ''));
+  updateStats();
+  updateNavProgress();
+  addLog('All reps reset');
+}
+
+initState();
+renderDrills('chmod');
+updateStats();
+updateNavProgress();
+</script>
+</body>
+</html>
