@@ -1,0 +1,12 @@
+2024-01-15 08:01:12 INFO Server started on port 8080
+2024-01-15 08:01:15 INFO Loading model from /models/v2
+2024-01-15 08:02:01 WARNING Memory usage at 78%
+2024-01-15 08:03:44 ERROR Failed to load model: file not found
+2024-01-15 08:03:45 INFO Retrying model load...
+2024-01-15 08:04:01 ERROR Connection timeout to database
+2024-01-15 08:04:02 WARNING Falling back to cache
+2024-01-15 08:05:00 INFO Request processed in 230ms
+2024-01-15 08:05:30 ERROR Out of memory: killed process 3421
+2024-01-15 08:06:00 INFO Server restarted
+2024-01-15 08:06:15 WARNING Disk usage at 91%
+2024-01-15 08:07:00 INFO Model v2 loaded successfully
