@@ -20,3 +20,7 @@ Shell scripts and notes built during my MLOps engineering transition.
 chmod 755 scripts/system-info.sh
 ./scripts/system-info.sh
 ```
+## Scripts
+- system-info.sh — displays system information
+- setup-env.sh — sets up MLOps environment variables
+- log-parser.sh — parses log files and prints summary report
