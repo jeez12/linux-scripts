@@ -29,7 +29,7 @@ free -h | awk 'NR==2 {print "  Total: "$2" Used: "$3" Free: "$4}'
 # Disk
 echo ""
 echo "DISK USAGE:"
-df -h / | awk 'NR==2 {print " Total: "$2" Used: "$3" Free: "$4" Usage: "$5}'
+df -h / | awk 'NR==2 {print "Total: "$2" Used: "$3" Free: "$4" Usage: "$5}'
 
 # Running processes
 echo ""
