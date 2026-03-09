@@ -1,5 +1,4 @@
-# linux-scripts
-
+# Linux Scripts — MLOps Learning
 Shell scripts and notes built during my MLOps engineering transition.
 
 ## Scripts
